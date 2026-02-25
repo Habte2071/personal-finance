@@ -2,6 +2,7 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
+import axios from 'axios'; // add this import
 
 export const useUser = () => {
   const queryClient = useQueryClient();
@@ -14,8 +15,13 @@ export const useUser = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['me'] });
     },
-    onError: (error: any) => {
-      console.error('Update profile error:', error.response?.data || error.message);
+    onError: (error: unknown) => {
+      if (axios.isAxiosError(error)) {
+        // error is now typed as AxiosError
+        console.error('Update profile error:', error.response?.data || error.message);
+      } else {
+        console.error('Unexpected error:', error);
+      }
     },
   });
 
@@ -31,8 +37,12 @@ export const useUser = () => {
     onSuccess: (data) => {
       console.log('✅ Password change success:', data);
     },
-    onError: (error: any) => {
-      console.error('❌ Password change error:', error.response?.data || error.message);
+    onError: (error: unknown) => {
+      if (axios.isAxiosError(error)) {
+        console.error('❌ Password change error:', error.response?.data || error.message);
+      } else {
+        console.error('❌ Unexpected error:', error);
+      }
     },
   });
 

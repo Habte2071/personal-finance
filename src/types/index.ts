@@ -1,6 +1,6 @@
 // User Types
 export interface User {
-  id: string;
+  id: number;               // was string
   email: string;
   first_name: string;
   last_name: string;
@@ -31,8 +31,8 @@ export interface AuthResponse {
 export type AccountType = 'checking' | 'savings' | 'credit_card' | 'cash' | 'investment' | 'other';
 
 export interface Account {
-  id: string;
-  user_id: string;
+  id: number;               // was string
+  user_id: number;          // was string
   name: string;
   type: AccountType;
   balance: number;
@@ -55,8 +55,8 @@ export interface AccountCreateInput {
 export type CategoryType = 'income' | 'expense';
 
 export interface Category {
-  id: string;
-  user_id: string | null;
+  id: number;               // was string
+  user_id: number | null;   // was string | null
   name: string;
   type: CategoryType;
   color: string;
@@ -76,10 +76,10 @@ export interface CategoryCreateInput {
 export type TransactionType = 'income' | 'expense' | 'transfer';
 
 export interface Transaction {
-  id: string;
-  user_id: string;
-  account_id: string;
-  category_id: string | null;
+  id: number;               // was string
+  user_id: number;          // was string
+  account_id: number;       // was string
+  category_id: number | null; // was string | null
   type: TransactionType;
   amount: number;
   description: string;
@@ -94,8 +94,8 @@ export interface Transaction {
 }
 
 export interface TransactionCreateInput {
-  account_id: string;
-  category_id?: string;
+  account_id: number;       // was string
+  category_id?: number;     // was string
   type: TransactionType;
   amount: number;
   description: string;
@@ -106,8 +106,8 @@ export interface TransactionCreateInput {
 export interface TransactionFilters {
   startDate?: string;
   endDate?: string;
-  accountId?: string;
-  categoryId?: string;
+  accountId?: number;       // was string
+  categoryId?: number;      // was string
   type?: TransactionType;
   minAmount?: number;
   maxAmount?: number;
@@ -119,9 +119,9 @@ export interface TransactionFilters {
 export type BudgetPeriod = 'weekly' | 'monthly' | 'yearly';
 
 export interface Budget {
-  id: string;
-  user_id: string;
-  category_id: string;
+  id: number;               // was string
+  user_id: number;          // was string
+  category_id: number;      // was string
   amount: number;
   period: BudgetPeriod;
   start_date: string;
@@ -137,7 +137,7 @@ export interface Budget {
 }
 
 export interface BudgetCreateInput {
-  category_id: string;
+  category_id: number;      // was string
   amount: number;
   period: BudgetPeriod;
   start_date: string;
@@ -161,7 +161,7 @@ export interface MonthlyData {
 }
 
 export interface CategorySummary {
-  category_id: string;
+  category_id: number;      // was string
   category_name: string;
   category_color: string;
   total: number;

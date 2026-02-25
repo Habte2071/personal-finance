@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { useDashboard } from '@/hooks/useDashboard';
 import { useAuth } from '@/hooks/useAuth';
 import { formatCurrency } from '@/utils/format';
@@ -41,6 +42,15 @@ export default function DashboardPage() {
     errors,
   } = useDashboard();
 
+  // Sort recent transactions by latest date first (descending)
+  const sortedRecentTransactions = useMemo(() => {
+    if (!recentTransactions) return [];
+    return [...recentTransactions].sort(
+      (a, b) =>
+        new Date(b.transaction_date).getTime() - new Date(a.transaction_date).getTime()
+    );
+  }, [recentTransactions]);
+
   if (isAuthLoading) {
     return <DashboardSkeleton />;
   }
@@ -53,12 +63,13 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen space-y-6 px-4 py-6 sm:px-6 lg:px-8 bg-gradient-to-br from-gray-50/50 to-gray-100/50 dark:from-gray-900/50 dark:to-gray-800/50">
-      <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
+      <h1 className="text-2xl font-bold tracking-tight sm:text-3xl bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
         Dashboard
       </h1>
 
+      {/* Error Alert */}
       {hasErrors && (
-        <Alert variant="destructive" className="max-w-3xl animate-in slide-in-from-top-2 border-red-200 bg-red-50/50 dark:bg-red-900/20 backdrop-blur-sm">
+        <Alert variant="destructive" className="max-w-3xl animate-in slide-in-from-top-2">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
             Failed to load some dashboard data. Please refresh the page.
@@ -66,6 +77,7 @@ export default function DashboardPage() {
         </Alert>
       )}
 
+      {/* Stats Grid */}
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Total Balance"
@@ -99,7 +111,9 @@ export default function DashboardPage() {
         />
       </div>
 
+      {/* Charts */}
       <div className="grid gap-5 sm:gap-6 grid-cols-1 lg:grid-cols-2">
+        {/* Monthly Trend Bar Chart */}
         <Card className="overflow-hidden border-0 shadow-lg bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg">
           <CardHeader className="pb-2">
             <CardTitle className="text-lg sm:text-xl">Monthly Trend</CardTitle>
@@ -125,7 +139,7 @@ export default function DashboardPage() {
                       tick={{ fontSize: 12 }}
                       axisLine={false}
                       tickLine={false}
-                      tickFormatter={(v) => `ETB${Math.round(v / 1000)}k`}
+                      tickFormatter={(v) => `$${Math.round(v / 1000)}k`}
                     />
                     <Tooltip
                       formatter={(value: number | undefined) =>
@@ -159,6 +173,7 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
+        {/* Expenses by Category Pie Chart */}
         <Card className="overflow-hidden border-0 shadow-lg bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg">
           <CardHeader className="pb-2">
             <CardTitle className="text-lg sm:text-xl">Expenses by Category</CardTitle>
@@ -210,6 +225,7 @@ export default function DashboardPage() {
         </Card>
       </div>
 
+      {/* Recent Transactions */}
       <Card className="border-0 shadow-lg bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg">
         <CardHeader className="pb-3">
           <CardTitle className="text-lg sm:text-xl">Recent Transactions</CardTitle>
@@ -220,12 +236,12 @@ export default function DashboardPage() {
               [...Array(5)].map((_, i) => (
                 <Skeleton key={i} className="h-20 sm:h-16 w-full rounded-lg" />
               ))
-            ) : recentTransactions?.length === 0 ? (
+            ) : sortedRecentTransactions.length === 0 ? (
               <p className="text-center text-muted-foreground py-10 text-sm sm:text-base">
                 No recent transactions found
               </p>
             ) : (
-              recentTransactions?.map((t, idx) => (
+              sortedRecentTransactions.map((t, idx) => (
                 <div
                   key={t.id}
                   className="group flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between p-4 rounded-xl bg-gradient-to-r from-white/50 to-white/30 dark:from-gray-800/50 dark:to-gray-800/30 hover:from-white/80 hover:to-white/50 dark:hover:from-gray-700/80 dark:hover:to-gray-700/50 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/50 transition-all duration-300 hover:shadow-md animate-in slide-in-from-bottom-2"

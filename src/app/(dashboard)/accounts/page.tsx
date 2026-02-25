@@ -8,10 +8,21 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -45,9 +56,10 @@ export default function AccountsPage() {
   const { accounts, isLoading, createAccount, updateAccount, deleteAccount } = useAccounts();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingAccount, setEditingAccount] = useState<any>(null);
+  const [deleteId, setDeleteId] = useState<number | null>(null); // now number
   const { toast } = useToast();
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: number) => {
     try {
       await deleteAccount(id);
       toast({ title: 'Account deleted successfully' });
@@ -80,6 +92,9 @@ export default function AccountsPage() {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Create New Account</DialogTitle>
+              <DialogDescription>
+                Fill in the details to create a new account.
+              </DialogDescription>
             </DialogHeader>
             <AccountForm
               onSubmit={async (data) => {
@@ -123,7 +138,7 @@ export default function AccountsPage() {
                     Edit
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    onClick={() => handleDelete(account.id)}
+                    onClick={() => setDeleteId(account.id)}
                     className="text-red-600"
                   >
                     <Trash2 className="mr-2 h-4 w-4" />
@@ -161,6 +176,9 @@ export default function AccountsPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Edit Account</DialogTitle>
+            <DialogDescription>
+              Update the account details below.
+            </DialogDescription>
           </DialogHeader>
           {editingAccount && (
             <AccountForm
@@ -174,6 +192,32 @@ export default function AccountsPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteId !== null} onOpenChange={() => setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the account.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (deleteId) {
+                  handleDelete(deleteId);
+                  setDeleteId(null);
+                }
+              }}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

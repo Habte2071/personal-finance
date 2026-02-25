@@ -9,6 +9,7 @@ import {
   Tags,
   ArrowLeftRight,
   PiggyBank,
+  Mail,
 } from 'lucide-react';
 
 const navigation = [
@@ -17,13 +18,18 @@ const navigation = [
   { name: 'Transactions', href: '/transactions', icon: ArrowLeftRight },
   { name: 'Categories', href: '/categories', icon: Tags },
   { name: 'Budgets', href: '/budgets', icon: PiggyBank },
+  { name: 'Contact', href: '/contact', icon: Mail }, // Added Contact
 ];
 
-export function Sidebar() {
+interface SidebarProps {
+  onLinkClick?: () => void;
+}
+
+export function Sidebar({ onLinkClick }: SidebarProps) {
   const pathname = usePathname();
 
   return (
-    <aside className="w-full bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 min-h-[calc(100vh-4rem)] overflow-y-auto">
+    <aside className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 h-full overflow-y-auto">
       <nav className="p-4 space-y-1">
         {navigation.map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
@@ -31,6 +37,7 @@ export function Sidebar() {
             <Link
               key={item.name}
               href={item.href}
+              onClick={onLinkClick}
               className={cn(
                 'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
                 isActive

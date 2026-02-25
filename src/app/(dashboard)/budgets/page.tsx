@@ -9,10 +9,21 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -37,13 +48,13 @@ const periods: { value: BudgetPeriod; label: string }[] = [
 export default function BudgetsPage() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingBudget, setEditingBudget] = useState<any>(null);
+  const [deleteId, setDeleteId] = useState<number | null>(null); // Added for delete confirmation
   const { toast } = useToast();
 
   const { budgets, alerts, isLoading, createBudget, updateBudget, deleteBudget } = useBudgets();
   const { categories } = useCategories('expense');
 
-  // Handle delete with error toast
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: number) => {
     try {
       await deleteBudget(id);
       toast({ title: 'Budget deleted' });
@@ -56,7 +67,6 @@ export default function BudgetsPage() {
     }
   };
 
-  // Handle update with error toast
   const handleUpdate = async (data: any) => {
     try {
       await updateBudget({ id: editingBudget.id, data });
@@ -80,15 +90,16 @@ export default function BudgetsPage() {
           <DialogTrigger asChild>
             <Button className="w-full sm:w-auto">
               <Plus className="mr-2 h-4 w-4" />
-              {/* Hide full text on mobile, show short version */}
               <span className="hidden sm:inline">Create Budget</span>
               <span className="sm:hidden">Create</span>
             </Button>
           </DialogTrigger>
-          {/* Add scrollability on mobile */}
           <DialogContent className="max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>New Budget</DialogTitle>
+              <DialogDescription>
+                Set a budget for an expense category.
+              </DialogDescription>
             </DialogHeader>
             <BudgetForm
               categories={categories || []}
@@ -145,7 +156,7 @@ export default function BudgetsPage() {
                   <Button variant="ghost" size="icon" onClick={() => setEditingBudget(budget)}>
                     <Pencil className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" onClick={() => handleDelete(budget.id)}>
+                  <Button variant="ghost" size="icon" onClick={() => setDeleteId(budget.id)}>
                     <Trash2 className="h-4 w-4 text-red-500" />
                   </Button>
                 </div>
@@ -205,10 +216,12 @@ export default function BudgetsPage() {
 
       {/* Edit Dialog */}
       <Dialog open={!!editingBudget} onOpenChange={() => setEditingBudget(null)}>
-        {/* Add scrollability on mobile */}
         <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Budget</DialogTitle>
+            <DialogDescription>
+              Update your budget details.
+            </DialogDescription>
           </DialogHeader>
           {editingBudget && (
             <BudgetForm
@@ -219,11 +232,36 @@ export default function BudgetsPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteId !== null} onOpenChange={() => setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the budget.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (deleteId) {
+                  handleDelete(deleteId);
+                  setDeleteId(null);
+                }
+              }}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
 
-// ==================== BUDGET FORM ====================
 function BudgetForm({
   categories,
   initialData,
@@ -235,8 +273,8 @@ function BudgetForm({
 }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
-    category_id: initialData?.category_id || '',
-    amount: initialData?.amount || '',
+    category_id: initialData?.category_id?.toString() || '', // string
+    amount: initialData?.amount?.toString() || '',
     period: initialData?.period || 'monthly',
     start_date: initialData?.start_date
       ? new Date(initialData.start_date).toISOString().split('T')[0]
@@ -244,7 +282,7 @@ function BudgetForm({
     end_date: initialData?.end_date
       ? new Date(initialData.end_date).toISOString().split('T')[0]
       : '',
-    alert_threshold: initialData?.alert_threshold || 80,
+    alert_threshold: initialData?.alert_threshold?.toString() || '80',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -256,13 +294,13 @@ function BudgetForm({
         period: formData.period,
         start_date: formData.start_date,
         end_date: formData.end_date || undefined,
-        alert_threshold: parseInt(formData.alert_threshold as string),
+        alert_threshold: parseInt(formData.alert_threshold, 10),
       };
 
       // Only include category_id when creating a new budget
       const submitData = initialData
         ? baseData
-        : { ...baseData, category_id: formData.category_id };
+        : { ...baseData, category_id: Number(formData.category_id) }; // convert to number
 
       await onSubmit(submitData);
     } finally {
@@ -285,7 +323,7 @@ function BudgetForm({
           </SelectTrigger>
           <SelectContent>
             {categories.map((category) => (
-              <SelectItem key={category.id} value={category.id}>
+              <SelectItem key={category.id} value={category.id.toString()}> {/* value as string */}
                 <div className="flex items-center gap-2">
                   <div
                     className="w-3 h-3 rounded-full"

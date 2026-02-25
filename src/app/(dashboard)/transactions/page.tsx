@@ -6,14 +6,25 @@ import { useAccounts } from '@/hooks/useAccounts';
 import { useCategories } from '@/hooks/useCategories';
 import { formatCurrency, formatDate } from '@/utils/format';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -33,13 +44,12 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/use-toast';
-import { Plus, Filter, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
-import { TransactionType } from '@/types';
+import { Plus, Filter, ArrowUpDown, ArrowUp, ArrowDown, Pencil } from 'lucide-react';
+import { TransactionType, Transaction } from '@/types';
 
-// Define filter state type
 type FilterState = {
   type: TransactionType | undefined;
-  accountId: string | undefined;
+  accountId: number | undefined;
   startDate: string | undefined;
   endDate: string | undefined;
   page: number | undefined;
@@ -54,14 +64,15 @@ export default function TransactionsPage() {
     page: undefined,
   });
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
+  const [deleteId, setDeleteId] = useState<number | null>(null); // Added for delete confirmation
   const { toast } = useToast();
 
-  const { transactions, meta, isLoading, createTransaction, deleteTransaction } = useTransactions(filters);
+  const { transactions, meta, isLoading, createTransaction, updateTransaction, deleteTransaction } = useTransactions(filters);
   const { accounts } = useAccounts();
   const { categories } = useCategories();
 
-  // Reset filters to default (all undefined)
-  const resetFilters: FilterState = {
+  const resetFilters = {
     type: undefined,
     accountId: undefined,
     startDate: undefined,
@@ -69,7 +80,7 @@ export default function TransactionsPage() {
     page: undefined,
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: number) => {
     try {
       await deleteTransaction(id);
       toast({ title: 'Transaction deleted' });
@@ -80,6 +91,15 @@ export default function TransactionsPage() {
         variant: 'destructive',
       });
     }
+  };
+
+  const handleEdit = (transaction: Transaction) => {
+    setEditingTransaction(transaction);
+  };
+
+  const handleEditSuccess = () => {
+    setEditingTransaction(null);
+    toast({ title: 'Transaction updated successfully' });
   };
 
   const getTypeIcon = (type: TransactionType) => {
@@ -112,7 +132,6 @@ export default function TransactionsPage() {
           <DialogTrigger asChild>
             <Button className="w-full sm:w-auto">
               <Plus className="mr-2 h-4 w-4" />
-              {/* Hide text on extra small screens, show only icon */}
               <span className="hidden sm:inline">Add Transaction</span>
               <span className="sm:hidden">Add</span>
             </Button>
@@ -120,6 +139,9 @@ export default function TransactionsPage() {
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>New Transaction</DialogTitle>
+              <DialogDescription>
+                Fill in the details to add a new transaction.
+              </DialogDescription>
             </DialogHeader>
             <TransactionForm
               accounts={accounts || []}
@@ -132,6 +154,33 @@ export default function TransactionsPage() {
           </DialogContent>
         </Dialog>
       </div>
+
+      {/* Edit Dialog */}
+      <Dialog open={!!editingTransaction} onOpenChange={(open) => !open && setEditingTransaction(null)}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Transaction</DialogTitle>
+            <DialogDescription>
+              Update the transaction details.
+            </DialogDescription>
+          </DialogHeader>
+          {editingTransaction && (
+            <TransactionForm
+              accounts={accounts || []}
+              categories={categories || []}
+              initialData={editingTransaction}
+              onSuccess={handleEditSuccess}
+              isEditing={true}
+              onSubmit={async (data) => {
+                await updateTransaction({
+                  id: editingTransaction.id,
+                  data,
+                });
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Filters */}
       <Card>
@@ -157,15 +206,15 @@ export default function TransactionsPage() {
             <div className="space-y-2">
               <Label className="text-xs">Account</Label>
               <Select
-                value={filters.accountId}
-                onValueChange={(value) => setFilters({ ...filters, accountId: value })}
+                value={filters.accountId?.toString() || ''}
+                onValueChange={(value) => setFilters({ ...filters, accountId: value ? Number(value) : undefined })}
               >
                 <SelectTrigger className="w-full sm:w-[180px]">
                   <SelectValue placeholder="All accounts" />
                 </SelectTrigger>
                 <SelectContent>
                   {accounts?.map((account) => (
-                    <SelectItem key={account.id} value={account.id}>
+                    <SelectItem key={account.id} value={account.id.toString()}>
                       {account.name}
                     </SelectItem>
                   ))}
@@ -266,13 +315,22 @@ export default function TransactionsPage() {
                       {formatCurrency(transaction.amount)}
                     </TableCell>
                     <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDelete(transaction.id)}
-                      >
-                        Delete
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEdit(transaction)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setDeleteId(transaction.id)} // Changed to setDeleteId
+                        >
+                          Delete
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))
@@ -297,31 +355,67 @@ export default function TransactionsPage() {
           ))}
         </div>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteId !== null} onOpenChange={() => setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the transaction.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (deleteId) {
+                  handleDelete(deleteId);
+                  setDeleteId(null);
+                }
+              }}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
+}
+
+interface TransactionFormProps {
+  accounts: any[];
+  categories: any[];
+  initialData?: Transaction;
+  onSuccess: () => void;
+  isEditing?: boolean;
+  onSubmit?: (data: any) => Promise<void>;
 }
 
 function TransactionForm({
   accounts,
   categories,
+  initialData,
   onSuccess,
-}: {
-  accounts: any[];
-  categories: any[];
-  onSuccess: () => void;
-}) {
+  isEditing = false,
+  onSubmit,
+}: TransactionFormProps) {
   const { createTransaction } = useTransactions();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [type, setType] = useState<TransactionType>('expense');
+  const [type, setType] = useState<TransactionType>(initialData?.type || 'expense');
   const [formData, setFormData] = useState({
-    account_id: '',
-    category_id: undefined as string | undefined,
-    type: 'expense' as TransactionType,
-    amount: '',
-    description: '',
-    transaction_date: new Date().toISOString().split('T')[0],
-    notes: '',
+    account_id: initialData?.account_id?.toString() || '', // string
+    category_id: initialData?.category_id?.toString() || '',
+    type: initialData?.type || 'expense',
+    amount: initialData?.amount?.toString() || '',
+    description: initialData?.description || '',
+    transaction_date: initialData?.transaction_date 
+      ? new Date(initialData.transaction_date).toISOString().split('T')[0]
+      : new Date().toISOString().split('T')[0],
+    notes: initialData?.notes || '',
   });
 
   const filteredCategories = categories.filter((c) => c.type === type);
@@ -337,26 +431,40 @@ function TransactionForm({
 
     setIsSubmitting(true);
     try {
-      await createTransaction({
-        ...formData,
-        category_id: formData.category_id || undefined,
+      const submitData = {
+        account_id: Number(formData.account_id),
+        category_id: formData.category_id ? Number(formData.category_id) : undefined,
+        type: formData.type,
         amount: amountNum,
-      });
+        description: formData.description,
+        transaction_date: formData.transaction_date,
+        notes: formData.notes || undefined,
+      };
+
+      if (isEditing && onSubmit) {
+        await onSubmit(submitData);
+      } else {
+        await createTransaction(submitData);
+      }
+      
       onSuccess();
-      setFormData({
-        account_id: '',
-        category_id: undefined,
-        type: 'expense',
-        amount: '',
-        description: '',
-        transaction_date: new Date().toISOString().split('T')[0],
-        notes: '',
-      });
-      setType('expense');
+      
+      if (!isEditing) {
+        setFormData({
+          account_id: '',
+          category_id: '',
+          type: 'expense',
+          amount: '',
+          description: '',
+          transaction_date: new Date().toISOString().split('T')[0],
+          notes: '',
+        });
+        setType('expense');
+      }
     } catch (err: any) {
       toast({
         title: 'Error',
-        description: err.response?.data?.message || 'Failed to create transaction',
+        description: err.response?.data?.message || `Failed to ${isEditing ? 'update' : 'create'} transaction`,
         variant: 'destructive',
       });
     } finally {
@@ -373,7 +481,7 @@ function TransactionForm({
             value={type}
             onValueChange={(value) => {
               setType(value as TransactionType);
-              setFormData({ ...formData, type: value as TransactionType, category_id: undefined });
+              setFormData({ ...formData, type: value as TransactionType, category_id: '' });
             }}
           >
             <SelectTrigger>
@@ -420,7 +528,7 @@ function TransactionForm({
             </SelectTrigger>
             <SelectContent>
               {accounts.map((account) => (
-                <SelectItem key={account.id} value={account.id}>
+                <SelectItem key={account.id} value={account.id.toString()}>
                   {account.name}
                 </SelectItem>
               ))}
@@ -439,7 +547,7 @@ function TransactionForm({
             </SelectTrigger>
             <SelectContent>
               {filteredCategories.map((category) => (
-                <SelectItem key={category.id} value={category.id}>
+                <SelectItem key={category.id} value={category.id.toString()}>
                   <div className="flex items-center gap-2">
                     <div
                       className="w-3 h-3 rounded-full shrink-0"
@@ -473,7 +581,7 @@ function TransactionForm({
       </div>
 
       <Button type="submit" className="w-full" disabled={isSubmitting}>
-        {isSubmitting ? 'Creating...' : 'Create Transaction'}
+        {isSubmitting ? (isEditing ? 'Updating...' : 'Creating...') : (isEditing ? 'Update Transaction' : 'Create Transaction')}
       </Button>
     </form>
   );

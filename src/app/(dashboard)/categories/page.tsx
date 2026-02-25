@@ -7,10 +7,21 @@ import { Card, CardContent } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -32,6 +43,7 @@ const PRESET_COLORS = [
 export default function CategoriesPage() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<any>(null);
+  const [deleteId, setDeleteId] = useState<number | null>(null); // Added for delete confirmation
   const { toast } = useToast();
 
   const { categories, isLoading, createCategory, updateCategory, deleteCategory } = useCategories();
@@ -39,7 +51,7 @@ export default function CategoriesPage() {
   const incomeCategories = categories?.filter((c) => c.type === 'income') || [];
   const expenseCategories = categories?.filter((c) => c.type === 'expense') || [];
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: number) => {
     try {
       await deleteCategory(id);
       toast({ title: 'Category deleted' });
@@ -66,6 +78,9 @@ export default function CategoriesPage() {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Create Category</DialogTitle>
+              <DialogDescription>
+                Add a new category for your transactions.
+              </DialogDescription>
             </DialogHeader>
             <CategoryForm
               onSubmit={async (data) => {
@@ -88,7 +103,7 @@ export default function CategoriesPage() {
           <CategoryGrid
             categories={expenseCategories}
             onEdit={setEditingCategory}
-            onDelete={handleDelete}
+            onDeleteClick={setDeleteId} // Changed prop name
           />
         </TabsContent>
 
@@ -96,7 +111,7 @@ export default function CategoriesPage() {
           <CategoryGrid
             categories={incomeCategories}
             onEdit={setEditingCategory}
-            onDelete={handleDelete}
+            onDeleteClick={setDeleteId} // Changed prop name
           />
         </TabsContent>
       </Tabs>
@@ -106,6 +121,9 @@ export default function CategoriesPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Edit Category</DialogTitle>
+            <DialogDescription>
+              Update the category details.
+            </DialogDescription>
           </DialogHeader>
           {editingCategory && (
             <CategoryForm
@@ -119,6 +137,32 @@ export default function CategoriesPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteId !== null} onOpenChange={() => setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the category.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (deleteId) {
+                  handleDelete(deleteId);
+                  setDeleteId(null);
+                }
+              }}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
@@ -126,11 +170,11 @@ export default function CategoriesPage() {
 function CategoryGrid({
   categories,
   onEdit,
-  onDelete,
+  onDeleteClick, // Renamed from onDelete
 }: {
   categories: any[];
   onEdit: (cat: any) => void;
-  onDelete: (id: string) => void;
+  onDeleteClick: (id: number) => void; // Now accepts id to open confirmation
 }) {
   return (
     <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
@@ -157,7 +201,7 @@ function CategoryGrid({
                   <Button variant="ghost" size="icon" onClick={() => onEdit(category)}>
                     <Pencil className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" onClick={() => onDelete(category.id)}>
+                  <Button variant="ghost" size="icon" onClick={() => onDeleteClick(category.id)}>
                     <Trash2 className="h-4 w-4 text-red-500" />
                   </Button>
                 </div>

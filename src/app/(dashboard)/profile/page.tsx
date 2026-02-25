@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/use-toast';
 import { AlertCircle, CheckCircle } from 'lucide-react';
 import api from '@/lib/axios';
+import axios from 'axios'; // 👈 add for type guard
 
 export default function ProfilePage() {
   const { user } = useAuth();
@@ -40,12 +41,16 @@ export default function ProfilePage() {
     try {
       await updateProfile(profileData);
       toast({ title: 'Profile updated successfully' });
-    } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error.response?.data?.message || 'Failed to update profile',
-        variant: 'destructive',
-      });
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        toast({
+          title: 'Error',
+          description: error.response?.data?.message || 'Failed to update profile',
+          variant: 'destructive',
+        });
+      } else {
+        toast({ title: 'Unexpected error', variant: 'destructive' });
+      }
     }
   };
 
@@ -70,12 +75,16 @@ export default function ProfilePage() {
 
       toast({ title: 'Password changed successfully' });
       setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
-    } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error.response?.data?.message || 'Failed to change password',
-        variant: 'destructive',
-      });
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        toast({
+          title: 'Error',
+          description: error.response?.data?.message || 'Failed to change password',
+          variant: 'destructive',
+        });
+      } else {
+        toast({ title: 'Unexpected error', variant: 'destructive' });
+      }
     } finally {
       setIsChangingPassword(false);
     }

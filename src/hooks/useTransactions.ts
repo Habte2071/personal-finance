@@ -15,8 +15,8 @@ export const useTransactions = (filters?: TransactionFilters) => {
       const params = new URLSearchParams();
       if (filters?.startDate) params.append('startDate', filters.startDate);
       if (filters?.endDate) params.append('endDate', filters.endDate);
-      if (filters?.accountId) params.append('accountId', filters.accountId);
-      if (filters?.categoryId) params.append('categoryId', filters.categoryId);
+      if (filters?.accountId) params.append('accountId', filters.accountId.toString()); // number to string
+      if (filters?.categoryId) params.append('categoryId', filters.categoryId.toString());
       if (filters?.type) params.append('type', filters.type);
       if (filters?.page) params.append('page', filters.page.toString());
       if (filters?.limit) params.append('limit', filters.limit.toString());
@@ -39,7 +39,7 @@ export const useTransactions = (filters?: TransactionFilters) => {
   });
 
   const updateMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Partial<TransactionCreateInput> }) => {
+    mutationFn: async ({ id, data }: { id: number; data: Partial<TransactionCreateInput> }) => {
       const response = await api.patch(`/transactions/${id}`, data);
       return response.data.data;
     },
@@ -51,7 +51,7 @@ export const useTransactions = (filters?: TransactionFilters) => {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async (id: number) => {
       await api.delete(`/transactions/${id}`);
     },
     onSuccess: () => {
