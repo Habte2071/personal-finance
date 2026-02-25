@@ -48,7 +48,7 @@ const periods: { value: BudgetPeriod; label: string }[] = [
 export default function BudgetsPage() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingBudget, setEditingBudget] = useState<any>(null);
-  const [deleteId, setDeleteId] = useState<number | null>(null); // Added for delete confirmation
+  const [deleteId, setDeleteId] = useState<number | null>(null);
   const { toast } = useToast();
 
   const { budgets, alerts, isLoading, createBudget, updateBudget, deleteBudget } = useBudgets();
@@ -56,7 +56,8 @@ export default function BudgetsPage() {
 
   const handleDelete = async (id: number) => {
     try {
-      await deleteBudget(id);
+      // Convert number to string for the API function
+      await deleteBudget(id.toString());
       toast({ title: 'Budget deleted' });
     } catch (error: any) {
       toast({
@@ -69,7 +70,8 @@ export default function BudgetsPage() {
 
   const handleUpdate = async (data: any) => {
     try {
-      await updateBudget({ id: editingBudget.id, data });
+      // Convert editingBudget.id (number) to string for the update function
+      await updateBudget({ id: editingBudget.id.toString(), data });
       setEditingBudget(null);
       toast({ title: 'Budget updated' });
     } catch (error: any) {
@@ -273,7 +275,7 @@ function BudgetForm({
 }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
-    category_id: initialData?.category_id?.toString() || '', // string
+    category_id: initialData?.category_id?.toString() || '',
     amount: initialData?.amount?.toString() || '',
     period: initialData?.period || 'monthly',
     start_date: initialData?.start_date
@@ -300,7 +302,7 @@ function BudgetForm({
       // Only include category_id when creating a new budget
       const submitData = initialData
         ? baseData
-        : { ...baseData, category_id: Number(formData.category_id) }; // convert to number
+        : { ...baseData, category_id: Number(formData.category_id) };
 
       await onSubmit(submitData);
     } finally {
@@ -323,7 +325,7 @@ function BudgetForm({
           </SelectTrigger>
           <SelectContent>
             {categories.map((category) => (
-              <SelectItem key={category.id} value={category.id.toString()}> {/* value as string */}
+              <SelectItem key={category.id} value={category.id.toString()}>
                 <div className="flex items-center gap-2">
                   <div
                     className="w-3 h-3 rounded-full"

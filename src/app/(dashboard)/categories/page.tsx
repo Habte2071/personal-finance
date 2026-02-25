@@ -43,7 +43,7 @@ const PRESET_COLORS = [
 export default function CategoriesPage() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<any>(null);
-  const [deleteId, setDeleteId] = useState<number | null>(null); // Added for delete confirmation
+  const [deleteId, setDeleteId] = useState<number | null>(null);
   const { toast } = useToast();
 
   const { categories, isLoading, createCategory, updateCategory, deleteCategory } = useCategories();
@@ -53,7 +53,8 @@ export default function CategoriesPage() {
 
   const handleDelete = async (id: number) => {
     try {
-      await deleteCategory(id);
+      // Convert number id to string for the API function
+      await deleteCategory(id.toString());
       toast({ title: 'Category deleted' });
     } catch (error: any) {
       toast({
@@ -103,7 +104,7 @@ export default function CategoriesPage() {
           <CategoryGrid
             categories={expenseCategories}
             onEdit={setEditingCategory}
-            onDeleteClick={setDeleteId} // Changed prop name
+            onDeleteClick={setDeleteId}
           />
         </TabsContent>
 
@@ -111,7 +112,7 @@ export default function CategoriesPage() {
           <CategoryGrid
             categories={incomeCategories}
             onEdit={setEditingCategory}
-            onDeleteClick={setDeleteId} // Changed prop name
+            onDeleteClick={setDeleteId}
           />
         </TabsContent>
       </Tabs>
@@ -129,7 +130,8 @@ export default function CategoriesPage() {
             <CategoryForm
               initialData={editingCategory}
               onSubmit={async (data) => {
-                await updateCategory({ id: editingCategory.id, data });
+                // Convert number id to string for the update function
+                await updateCategory({ id: editingCategory.id.toString(), data });
                 setEditingCategory(null);
                 toast({ title: 'Category updated' });
               }}
@@ -170,11 +172,11 @@ export default function CategoriesPage() {
 function CategoryGrid({
   categories,
   onEdit,
-  onDeleteClick, // Renamed from onDelete
+  onDeleteClick,
 }: {
   categories: any[];
   onEdit: (cat: any) => void;
-  onDeleteClick: (id: number) => void; // Now accepts id to open confirmation
+  onDeleteClick: (id: number) => void;
 }) {
   return (
     <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">

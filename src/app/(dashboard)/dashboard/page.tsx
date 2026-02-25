@@ -32,13 +32,13 @@ const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'
 
 export default function DashboardPage() {
   const { user, isLoading: isAuthLoading } = useAuth();
-  const {
-    stats,
-    monthlyTrend,
-    expenseByCategory,
-    recentTransactions,
+  const { 
+    stats, 
+    monthlyTrend, 
+    expenseByCategory, 
+    recentTransactions, 
     isLoading,
-    errors,
+    errors 
   } = useDashboard();
 
   if (isAuthLoading) {
@@ -52,13 +52,12 @@ export default function DashboardPage() {
   const hasErrors = errors.stats || errors.trend || errors.category || errors.recent;
 
   return (
-    <div className="min-h-screen space-y-6 px-4 py-6 sm:px-6 lg:px-8 bg-gradient-to-br from-gray-50/50 to-gray-100/50 dark:from-gray-900/50 dark:to-gray-800/50">
-      <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
-        Dashboard
-      </h1>
+    <div className="space-y-6">
+      <h1 className="text-2xl sm:text-3xl font-bold">Dashboard</h1>
 
+      {/* Error Alert */}
       {hasErrors && (
-        <Alert variant="destructive" className="max-w-3xl animate-in slide-in-from-top-2 border-red-200 bg-red-50/50 dark:bg-red-900/20 backdrop-blur-sm">
+        <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
             Failed to load some dashboard data. Please refresh the page.
@@ -66,6 +65,7 @@ export default function DashboardPage() {
         </Alert>
       )}
 
+      {/* Stats Grid */}
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Total Balance"
@@ -99,59 +99,30 @@ export default function DashboardPage() {
         />
       </div>
 
-      <div className="grid gap-5 sm:gap-6 grid-cols-1 lg:grid-cols-2">
-        <Card className="overflow-hidden border-0 shadow-lg bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg sm:text-xl">Monthly Trend</CardTitle>
+      {/* Charts */}
+      <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
+        {/* Monthly Trend */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Monthly Trend</CardTitle>
           </CardHeader>
-          <CardContent className="p-4 pt-0">
-            <div className="h-64 sm:h-72 lg:h-80">
+          <CardContent>
+            <div className="h-[250px] sm:h-[300px]">
               {isLoading ? (
-                <Skeleton className="h-full w-full rounded-md" />
+                <Skeleton className="h-full w-full" />
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={monthlyTrend || []}
-                    margin={{ top: 12, right: 12, left: -8, bottom: 4 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                    <XAxis
-                      dataKey="month"
-                      tick={{ fontSize: 12 }}
-                      axisLine={false}
-                      tickLine={false}
-                    />
-                    <YAxis
-                      tick={{ fontSize: 12 }}
-                      axisLine={false}
-                      tickLine={false}
-                      tickFormatter={(v) => `ETB${Math.round(v / 1000)}k`}
-                    />
+                  <BarChart data={monthlyTrend || []}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="month" />
+                    <YAxis />
                     <Tooltip
                       formatter={(value: number | undefined) =>
-                        value !== undefined ? formatCurrency(value) : '—'
+                        value !== undefined ? formatCurrency(value) : ''
                       }
-                      contentStyle={{
-                        backgroundColor: 'hsl(var(--background))',
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px',
-                        boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)',
-                      }}
                     />
-                    <Bar
-                      dataKey="income"
-                      fill="#10B981"
-                      name="Income"
-                      radius={[6, 6, 0, 0]}
-                      animationDuration={1500}
-                    />
-                    <Bar
-                      dataKey="expense"
-                      fill="#EF4444"
-                      name="Expense"
-                      radius={[6, 6, 0, 0]}
-                      animationDuration={1500}
-                    />
+                    <Bar dataKey="income" fill="#10B981" name="Income" />
+                    <Bar dataKey="expense" fill="#EF4444" name="Expense" />
                   </BarChart>
                 </ResponsiveContainer>
               )}
@@ -159,48 +130,43 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="overflow-hidden border-0 shadow-lg bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg sm:text-xl">Expenses by Category</CardTitle>
+        {/* Expense by Category */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Expenses by Category</CardTitle>
           </CardHeader>
-          <CardContent className="p-4 pt-0">
-            <div className="h-64 sm:h-72 lg:h-80">
+          <CardContent>
+            <div className="h-[250px] sm:h-[300px]">
               {isLoading ? (
-                <Skeleton className="h-full w-full rounded-md" />
+                <Skeleton className="h-full w-full" />
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
-                  <PieChart margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
+                  <PieChart>
                     <Pie
                       data={expenseByCategory || []}
                       cx="50%"
                       cy="50%"
                       labelLine={false}
-                      outerRadius="80%"
-                      innerRadius="50%"
-                      paddingAngle={2}
+                      label={({ payload }) => {
+                        const { category_name, percentage } = payload;
+                        return percentage > 5 ? `${category_name} ${percentage}%` : '';
+                      }}
+                      outerRadius={80}
+                      fill="#8884d8"
                       dataKey="total"
                       nameKey="category_name"
-                      animationDuration={1500}
                     >
                       {(expenseByCategory || []).map((entry, index) => (
                         <Cell
                           key={`cell-${index}`}
                           fill={entry.category_color || COLORS[index % COLORS.length]}
-                          stroke="rgba(255,255,255,0.2)"
-                          strokeWidth={2}
                         />
                       ))}
                     </Pie>
                     <Tooltip
                       formatter={(value: number | undefined) =>
-                        value !== undefined ? formatCurrency(value) : '—'
+                        value !== undefined ? formatCurrency(value) : ''
                       }
-                      contentStyle={{
-                        backgroundColor: 'hsl(var(--background))',
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px',
-                        boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)',
-                      }}
                     />
                   </PieChart>
                 </ResponsiveContainer>
@@ -210,55 +176,48 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      <Card className="border-0 shadow-lg bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg sm:text-xl">Recent Transactions</CardTitle>
+      {/* Recent Transactions */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Transactions</CardTitle>
         </CardHeader>
-        <CardContent className="px-3 sm:px-6 pb-6">
-          <div className="space-y-3 sm:space-y-4">
+        <CardContent>
+          <div className="space-y-4">
             {isLoading ? (
               [...Array(5)].map((_, i) => (
-                <Skeleton key={i} className="h-20 sm:h-16 w-full rounded-lg" />
+                <Skeleton key={i} className="h-16 w-full" />
               ))
             ) : recentTransactions?.length === 0 ? (
-              <p className="text-center text-muted-foreground py-10 text-sm sm:text-base">
-                No recent transactions found
-              </p>
+              <p className="text-center text-gray-500 py-8">No recent transactions</p>
             ) : (
-              recentTransactions?.map((t, idx) => (
+              recentTransactions?.map((transaction) => (
                 <div
-                  key={t.id}
-                  className="group flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between p-4 rounded-xl bg-gradient-to-r from-white/50 to-white/30 dark:from-gray-800/50 dark:to-gray-800/30 hover:from-white/80 hover:to-white/50 dark:hover:from-gray-700/80 dark:hover:to-gray-700/50 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/50 transition-all duration-300 hover:shadow-md animate-in slide-in-from-bottom-2"
-                  style={{ animationDelay: `${idx * 50}ms` }}
+                  key={transaction.id}
+                  className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg gap-3"
                 >
-                  <div className="flex items-start sm:items-center gap-3 sm:gap-4 min-w-0">
+                  <div className="flex items-center gap-4">
                     <div
-                      className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center text-white font-semibold shrink-0 text-sm sm:text-base shadow-md transition-transform group-hover:scale-110"
-                      style={{ backgroundColor: t.category_color || '#3B82F6' }}
+                      className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold shrink-0"
+                      style={{ backgroundColor: transaction.category_color || '#3B82F6' }}
                     >
-                      {t.category_name?.[0]?.toUpperCase() || 'T'}
+                      {transaction.category_name?.[0] || 'T'}
                     </div>
-                    <div className="min-w-0">
-                      <p className="font-medium text-sm sm:text-base truncate">
-                        {t.description}
-                      </p>
-                      <p className="text-xs sm:text-sm text-muted-foreground truncate">
-                        {t.account_name} • {t.category_name}
+                    <div>
+                      <p className="font-medium">{transaction.description}</p>
+                      <p className="text-sm text-gray-500">
+                        {transaction.account_name} • {transaction.category_name}
                       </p>
                     </div>
                   </div>
-
-                  <div className="text-left sm:text-right flex-shrink-0">
-                    <p
-                      className={`font-semibold text-sm sm:text-base ${
-                        t.type === 'income' ? 'text-emerald-600' : 'text-rose-600'
-                      }`}
-                    >
-                      {t.type === 'income' ? '+' : '-'}
-                      {formatCurrency(t.amount)}
+                  <div className="text-left sm:text-right">
+                    <p className={`font-bold ${
+                      transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
+                    }`}>
+                      {transaction.type === 'income' ? '+' : '-'}
+                      {formatCurrency(transaction.amount)}
                     </p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {new Date(t.transaction_date).toLocaleDateString()}
+                    <p className="text-sm text-gray-500">
+                      {new Date(transaction.transaction_date).toLocaleDateString()}
                     </p>
                   </div>
                 </div>
@@ -288,10 +247,10 @@ function StatCard({
 }) {
   if (isLoading) {
     return (
-      <Card className="border-0 shadow-lg bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg">
-        <CardContent className="p-4 sm:p-5 lg:p-6">
-          <Skeleton className="h-3.5 w-20 sm:w-24 mb-2.5" />
-          <Skeleton className="h-7 sm:h-8 w-28 sm:w-36" />
+      <Card>
+        <CardContent className="p-4 sm:p-6">
+          <Skeleton className="h-4 w-20 sm:w-24 mb-2" />
+          <Skeleton className="h-6 sm:h-8 w-24 sm:w-32" />
         </CardContent>
       </Card>
     );
@@ -300,33 +259,27 @@ function StatCard({
   const isPositive = trendUp !== undefined ? trendUp : (trend || 0) >= 0;
 
   return (
-    <Card className="group border-0 shadow-lg bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg hover:bg-white/90 dark:hover:bg-gray-700/90 transition-all duration-300 hover:shadow-xl">
-      <CardContent className="p-4 sm:p-5 lg:p-6">
-        <div className="flex items-start justify-between gap-3">
-          <div className="space-y-1">
-            <p className="text-xs sm:text-sm font-medium text-muted-foreground">
-              {title}
-            </p>
-            <p className="text-xl sm:text-2xl font-bold">{value}</p>
-
+    <Card>
+      <CardContent className="p-4 sm:p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-xs sm:text-sm font-medium text-gray-500">{title}</p>
+            <p className="text-lg sm:text-2xl font-bold mt-2">{value}</p>
             {trend !== undefined && (
-              <div
-                className={`flex items-center gap-1 text-xs sm:text-sm font-medium ${
-                  isPositive ? 'text-emerald-600' : 'text-rose-600'
-                }`}
-              >
+              <div className={`flex items-center mt-2 text-xs sm:text-sm ${
+                isPositive ? 'text-green-600' : 'text-red-600'
+              }`}>
                 {isPositive ? (
-                  <ArrowUpRight className="h-3.5 w-3.5" />
+                  <ArrowUpRight className="h-4 w-4 mr-1" />
                 ) : (
-                  <ArrowDownRight className="h-3.5 w-3.5" />
+                  <ArrowDownRight className="h-4 w-4 mr-1" />
                 )}
-                {Math.abs(trend).toFixed(1)}% from last month
+                {Math.abs(trend).toFixed(1)}%
               </div>
             )}
           </div>
-
-          <div className="p-2.5 sm:p-3 bg-primary/10 rounded-xl shrink-0 transition-transform group-hover:scale-110 group-hover:rotate-3">
-            <Icon className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+          <div className="p-2 sm:p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+            <Icon className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 dark:text-blue-400" />
           </div>
         </div>
       </CardContent>
@@ -336,18 +289,17 @@ function StatCard({
 
 function DashboardSkeleton() {
   return (
-    <div className="min-h-screen space-y-6 px-4 py-6 sm:px-6 lg:px-8">
-      <Skeleton className="h-9 sm:h-10 w-40 sm:w-52" />
+    <div className="space-y-6">
+      <Skeleton className="h-8 sm:h-10 w-32 sm:w-[200px]" />
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         {[...Array(4)].map((_, i) => (
-          <Skeleton key={i} className="h-28 sm:h-32 rounded-xl" />
+          <Skeleton key={i} className="h-24 sm:h-[120px]" />
         ))}
       </div>
-      <div className="grid gap-5 sm:gap-6 grid-cols-1 lg:grid-cols-2">
-        <Skeleton className="h-72 sm:h-80 lg:h-96 rounded-xl" />
-        <Skeleton className="h-72 sm:h-80 lg:h-96 rounded-xl" />
+      <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
+        <Skeleton className="h-[300px] sm:h-[400px]" />
+        <Skeleton className="h-[300px] sm:h-[400px]" />
       </div>
-      <Skeleton className="h-80 sm:h-96 rounded-xl" />
     </div>
   );
 }

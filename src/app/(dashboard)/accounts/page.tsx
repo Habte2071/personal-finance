@@ -61,7 +61,8 @@ export default function AccountsPage() {
 
   const handleDelete = async (id: number) => {
     try {
-      await deleteAccount(id);
+      // Convert number id to string for the API function
+      await deleteAccount(id.toString());
       toast({ title: 'Account deleted successfully' });
     } catch (error: any) {
       toast({
@@ -184,7 +185,8 @@ export default function AccountsPage() {
             <AccountForm
               initialData={editingAccount}
               onSubmit={async (data) => {
-                await updateAccount({ id: editingAccount.id, data });
+                // Convert number id to string for the update function
+                await updateAccount({ id: editingAccount.id.toString(), data });
                 setEditingAccount(null);
                 toast({ title: 'Account updated successfully' });
               }}
