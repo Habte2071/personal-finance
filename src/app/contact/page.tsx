@@ -198,7 +198,7 @@ export default function ContactPage() {
                     variant="outline"
                     size="icon"
                     className="rounded-full hover:bg-indigo-50 dark:hover:bg-indigo-900/50"
-                    onClick={() => window.open('https://github.com', '_blank')}
+                    onClick={() => window.open('https://github.com/Habte2071/personal-finance', '_blank')}
                   >
                     <Github className="h-5 w-5" />
                   </Button>
